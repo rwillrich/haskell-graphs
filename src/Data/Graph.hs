@@ -7,7 +7,7 @@ module Data.Graph where
 import Control.Applicative (liftA2)
 import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.State.Class (MonadState, state, modify, get, put)
-import Control.Monad.Trans.State (StateT, execStateT)
+import Control.Monad.Trans.State (StateT, execStateT, runStateT)
 
 data GraphError w a
   = NonExistingVertexError (Vertex a)
@@ -88,8 +88,8 @@ removeVertexS v = modify $ removeVertex v
 removeEdgeS :: (Graph g w a, MonadState (g w a) m) => Edge a w -> m ()
 removeEdgeS e = modify $ removeEdge e
 
-withGraph :: Graph g w a => g w a -> (StateT (g w a) (Either e)) b -> Either e (g w a)
-withGraph = flip execStateT
+withGraph :: Graph g w a => g w a -> (StateT (g w a) (Either e)) b -> Either e (b, (g w a))
+withGraph = flip runStateT
 
 buildGraph :: Graph g w a => (StateT (g w a) (Either e)) b -> Either e (g w a)
-buildGraph = withGraph emptyGraph
+buildGraph = flip execStateT emptyGraph
