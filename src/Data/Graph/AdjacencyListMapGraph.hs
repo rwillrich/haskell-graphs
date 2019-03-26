@@ -37,20 +37,19 @@ instance Ord a => Graph AdjacencyListMapGraph w a where
 
   insertVertex v (AdjacencyListMapGraph m)
     = (Vertex v, AdjacencyListMapGraph $ M.insert v [] m)
-    
+
   insertEdge (Vertex v) (Vertex v') w (AdjacencyListMapGraph m) = (edge, graph)
     where
       edge = do
-        vs <- maybeToRight (NonExistingVertexError (Vertex v)) $ M.lookup v m
-        when (not (M.member v' m)) $ Left $ NonExistingVertexError (Vertex v')
-        let newEdge = mkEdge v v' w
+        vs <- maybeToRight (NonExistingVertexError v) $ M.lookup v m
+        when (not (M.member v' m)) $ Left (NonExistingVertexError v')
         if any ((== v') . fst) vs
-          then Left (AlreadyExistingEdgeError newEdge)
-          else Right newEdge
+          then Left (AlreadyExistingEdgeError v v')
+          else Right $ mkEdge v v' w
       graph = case edge of
         Left _ -> (AdjacencyListMapGraph m)
         Right _ -> AdjacencyListMapGraph $ M.adjust (++ [(v', w)]) v m
-  
+
   removeVertex (Vertex v) (AdjacencyListMapGraph m)
     = AdjacencyListMapGraph $ M.map (filter ((/= v) . fst)) $ M.delete v m
 
@@ -58,10 +57,10 @@ instance Ord a => Graph AdjacencyListMapGraph w a where
     = AdjacencyListMapGraph $ M.adjust (filter ((/= v') . fst)) v m
 
   outDegree (Vertex v) (AdjacencyListMapGraph m)
-    = maybeToRight (NonExistingVertexError (Vertex v)) $ fmap length $ M.lookup v m
+    = maybeToRight (NonExistingVertexError v) $ fmap length $ M.lookup v m
 
   inDegree (Vertex v) (AdjacencyListMapGraph m) = do
-    when (not (M.member v m)) $ Left $ NonExistingVertexError (Vertex v)
+    when (not (M.member v m)) $ Left (NonExistingVertexError v)
     return $ M.foldl' combine 0 m
     where
       combine x vs =
@@ -70,10 +69,10 @@ instance Ord a => Graph AdjacencyListMapGraph w a where
           else x
 
   outgoingEdges (Vertex v) (AdjacencyListMapGraph m)
-    = maybeToRight (NonExistingVertexError (Vertex v)) $ fmap (uncurry (mkEdge v)) <$> M.lookup v m
-  
+    = maybeToRight (NonExistingVertexError v) $ fmap (uncurry (mkEdge v)) <$> M.lookup v m
+
   incomingEdges (Vertex v) (AdjacencyListMapGraph m) = do
-    when (not (M.member v m)) $ Left $ NonExistingVertexError (Vertex v)
+    when (not (M.member v m)) $ Left $ NonExistingVertexError v
     return $ M.foldlWithKey' combine [] m
     where
       combine es v' vs = es ++ ((uncurry (mkEdge v')) <$> filter ((== v) . fst) vs)

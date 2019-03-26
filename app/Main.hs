@@ -15,7 +15,7 @@ import Data.Graph.AdjacencyListMapGraph (AdjacencyListMapGraph)
 main :: IO ()
 main = print graph
   where
-    graph :: Either (GraphError Int Char) (AdjacencyListMapGraph Int Char)
+    graph :: Either (GraphError Char) (AdjacencyListMapGraph Int Char)
     graph = buildGraph do
       va <- insertVertexS 'a'
       vb <- insertVertexS 'b'
@@ -28,5 +28,5 @@ main = print graph
       insertEdgeS va vb 1
       vac <- insertEdgeS va vc 1
       insertEdgeS vb vc 1
-      
+
       removeEdgeS vac

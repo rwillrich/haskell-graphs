@@ -9,9 +9,9 @@ import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.State.Class (MonadState, state, modify, get, put)
 import Control.Monad.Trans.State (StateT, execStateT, runStateT)
 
-data GraphError w a
-  = NonExistingVertexError (Vertex a)
-  | AlreadyExistingEdgeError (Edge a w)
+data GraphError a
+  = NonExistingVertexError a
+  | AlreadyExistingEdgeError a a
   deriving (Eq, Show)
 
 newtype Vertex a
@@ -45,19 +45,19 @@ class Graph g w a where
 
   insertVertex :: a -> g w a -> (Vertex a, g w a)
 
-  insertEdge :: (Vertex a) -> (Vertex a) -> w -> g w a -> (Either (GraphError w a) (Edge a w), g w a)
+  insertEdge :: (Vertex a) -> (Vertex a) -> w -> g w a -> (Either (GraphError a) (Edge a w), g w a)
 
   removeVertex :: Vertex a -> g w a -> g w a
 
   removeEdge :: Edge a w -> g w a -> g w a
 
-  outDegree :: Vertex a -> g w a -> Either (GraphError w a) Int
+  outDegree :: Vertex a -> g w a -> Either (GraphError a) Int
 
-  inDegree :: Vertex a -> g w a -> Either (GraphError w a) Int
+  inDegree :: Vertex a -> g w a -> Either (GraphError a) Int
 
-  outgoingEdges :: Vertex a -> g w a -> Either (GraphError w a) [Edge a w]
+  outgoingEdges :: Vertex a -> g w a -> Either (GraphError a) [Edge a w]
 
-  incomingEdges :: Vertex a -> g w a -> Either (GraphError w a) [Edge a w]
+  incomingEdges :: Vertex a -> g w a -> Either (GraphError a) [Edge a w]
 
 mkEdge :: a -> a -> w -> Edge a w
 mkEdge v v' w = Edge (Vertex v) (Vertex v') w
@@ -73,7 +73,7 @@ oposite v e | from e == v = Just (to e)
 insertVertexS :: (Graph g w a, MonadState (g w a) m) => a -> m (Vertex a)
 insertVertexS v = state $ insertVertex v
 
-insertEdgeS :: (Graph g w a, MonadState (g w a) m, MonadError (GraphError w a) m) => Vertex a -> Vertex a -> w -> m (Edge a w)
+insertEdgeS :: (Graph g w a, MonadState (g w a) m, MonadError (GraphError a) m) => Vertex a -> Vertex a -> w -> m (Edge a w)
 insertEdgeS v v' w = do
   g <- get
   let (egee, g') = insertEdge v v' w g
