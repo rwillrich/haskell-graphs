@@ -4,7 +4,7 @@ module Main where
 
 import Data.Graph
   ( GraphError
-  , buildGraph
+  , buildGraph_
   , insertVertexS
   , insertEdgeS
   , removeVertexS
@@ -16,7 +16,7 @@ main :: IO ()
 main = print graph
   where
     graph :: Either (GraphError Char) (AdjacencyListMapGraph Int Char)
-    graph = buildGraph do
+    graph = buildGraph_ do
       va <- insertVertexS 'a'
       vb <- insertVertexS 'b'
       vc <- insertVertexS 'c'

@@ -7,7 +7,9 @@ module Data.Graph where
 import Control.Applicative (liftA2)
 import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.State.Class (MonadState, state, modify, get, put)
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Control.Monad.Trans.State (StateT, execStateT, runStateT)
+import Data.Functor.Identity (Identity(..), runIdentity)
 
 data GraphError a
   = NonExistingVertexError a
@@ -88,8 +90,26 @@ removeVertexS v = modify $ removeVertex v
 removeEdgeS :: (Graph g w a, MonadState (g w a) m) => Edge a w -> m ()
 removeEdgeS e = modify $ removeEdge e
 
-withGraph :: Graph g w a => g w a -> (StateT (g w a) (Either e)) b -> Either e (b, (g w a))
-withGraph = flip runStateT
+withGraph :: Graph g w a => g w a -> StateT (g w a) (ExceptT e Identity) b  -> Either e (b, g w a)
+withGraph graph = runIdentity . withGraphT graph
 
-buildGraph :: Graph g w a => (StateT (g w a) (Either e)) b -> Either e (g w a)
-buildGraph = flip execStateT emptyGraph
+withGraph_ :: Graph g w a => g w a -> StateT (g w a) (ExceptT e Identity) b  -> Either e (g w a)
+withGraph_ graph = runIdentity . withGraphT_ graph
+
+withGraphT :: Graph g w a => g w a -> StateT (g w a) (ExceptT e m) b -> m (Either e (b, g w a))
+withGraphT graph = runExceptT . flip runStateT graph
+
+withGraphT_ :: (Graph g w a, Monad m) => g w a -> StateT (g w a) (ExceptT e m) b -> m (Either e (g w a))
+withGraphT_ graph = runExceptT . flip execStateT graph
+
+buildGraph :: Graph g w a => StateT (g w a) (ExceptT e Identity) b  -> Either e (b, g w a)
+buildGraph = runIdentity . buildGraphT
+
+buildGraph_ :: Graph g w a => StateT (g w a) (ExceptT e Identity) b  -> Either e (g w a)
+buildGraph_ = runIdentity . buildGraphT_
+
+buildGraphT :: Graph g w a => StateT (g w a) (ExceptT e m) b -> m (Either e (b, g w a))
+buildGraphT = withGraphT emptyGraph
+
+buildGraphT_ :: (Graph g w a, Monad m) => StateT (g w a) (ExceptT e m) b -> m (Either e (g w a))
+buildGraphT_ = withGraphT_ emptyGraph
