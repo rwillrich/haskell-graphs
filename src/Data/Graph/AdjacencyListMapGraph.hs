@@ -11,7 +11,6 @@ import Data.Graph
   , GraphError(..)
   , Vertex(..)
   , Edge(..)
-  , emptyGraph
   , mkEdge
   )
 import Data.List (find)

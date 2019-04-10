@@ -9,7 +9,7 @@ import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.State.Class (MonadState, state, modify, get, put)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Control.Monad.Trans.State (StateT, execStateT, runStateT)
-import Data.Functor.Identity (Identity(..), runIdentity)
+import Data.Functor.Identity (Identity, runIdentity)
 
 data GraphError a
   = NonExistingVertexError a
